@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import Landing from "./pages/Landing.jsx";
 import Auth from "./pages/Auth.jsx";
+import Connect from "./pages/Connect.jsx";
 import Workspace from "./pages/Workspace.jsx";
-import { currentSession, clearSession, publicUser, updateUser } from "./auth.js";
+import { currentSession, clearSession, publicUser, updateUser, hasConnected } from "./auth.js";
 
 export default function App() {
   const [view, setView] = useState("auth");
@@ -13,8 +14,9 @@ export default function App() {
   useEffect(() => {
     const session = currentSession();
     if (session) {
-      setUser(publicUser(session));
-      setView("app");
+      const u = publicUser(session);
+      setUser(u);
+      setView(hasConnected(u) || u.onboarded ? "app" : "connect");
     } else {
       setView("auth");
       setAuthMode("login");
@@ -33,9 +35,10 @@ export default function App() {
   }
 
   function success(u) {
-    setUser(publicUser(u));
-    setView("app");
-    setToast("Welcome to SarvamAI · IG + FB + YouTube ready");
+    const pub = publicUser(u);
+    setUser(pub);
+    setView(hasConnected(pub) ? "app" : "connect");
+    setToast(hasConnected(pub) ? "Welcome back" : "Account created · connect Instagram next");
   }
 
   function logout() {
@@ -55,11 +58,17 @@ export default function App() {
     <>
       {view === "landing" && <Landing onEnter={enter} />}
       {view === "auth" && (
-        <Auth
-          mode={authMode}
-          onMode={setAuthMode}
-          onSuccess={success}
-          onBack={() => setView("landing")}
+        <Auth mode={authMode} onMode={setAuthMode} onSuccess={success} onBack={() => setView("landing")} />
+      )}
+      {view === "connect" && user && (
+        <Connect
+          user={user}
+          onSaveUser={saveUser}
+          toast={setToast}
+          onDone={() => {
+            saveUser({ onboarded: true });
+            setView("app");
+          }}
         />
       )}
       {view === "app" && user && (
