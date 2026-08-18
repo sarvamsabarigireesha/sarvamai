@@ -47,6 +47,11 @@ export function BulkDM({ toast, user }) {
   }
 
   async function start() {
+    const allowed = plats.filter((p) => user?.channels?.[p]?.connected);
+    if (!allowed.length) {
+      toast("Connect Instagram / Facebook first — then send");
+      return;
+    }
     if (!plats.length) {
       toast("Pick Instagram, Facebook, or both");
       return;
@@ -95,8 +100,8 @@ export function BulkDM({ toast, user }) {
           Send one message to many — from your IG + FB
         </h3>
         <p style={{ color: "var(--muted)", maxWidth: 640, marginTop: 6 }}>
-          Mee followers / leads list paste chey. Delay pettu (accounts safe undali). Ikkada demo send — real Meta
-          login connect ayinaka live DMs velthayi.
+          Connected IG / FB nundi list ki message velthundi. Connect lekunda start avvadhu. Real Meta API
+          review tarvata live inbox ki paduthundi — ippudu campaign log save avuthundi.
         </p>
       </div>
 
@@ -212,12 +217,13 @@ function fakePeople(seed, count, kind) {
 }
 
 export function InFollow({ toast, user }) {
-  const [ig, setIg] = useState((user?.channels?.ig?.handle || user?.handle || "").replace(/^@/, ""));
+  const [ig, setIg] = useState((user?.channels?.ig?.handle || "").replace(/^@/, ""));
   const [fb, setFb] = useState(user?.channels?.fb?.handle || "");
   const [kind, setKind] = useState("followers");
   const [busy, setBusy] = useState(false);
   const [rows, setRows] = useState([]);
   const [src, setSrc] = useState("");
+  const [notice, setNotice] = useState("");
 
   function run(platform) {
     const name = platform === "ig" ? ig : fb;
@@ -225,19 +231,28 @@ export function InFollow({ toast, user }) {
       toast("Enter the " + (platform === "ig" ? "Instagram" : "Facebook") + " profile name");
       return;
     }
+    if (!user?.channels?.[platform]?.connected) {
+      toast("Connect this account first — then export YOUR followers");
+      return;
+    }
     setBusy(true);
     setSrc("");
+    setNotice("");
     setTimeout(() => {
       const seed = name.length + (platform === "ig" ? 3 : 9);
-      const count = kind === "both" ? 36 : 24;
       const people =
         kind === "both"
           ? [...fakePeople(seed, 18, "follower"), ...fakePeople(seed + 11, 18, "following")]
-          : fakePeople(seed, count, kind === "following" ? "following" : "follower");
+          : fakePeople(seed, kind === "following" ? 24 : 24, kind === "following" ? "following" : "follower");
       setRows(people);
       setSrc(platform);
       setBusy(false);
-      toast("Exported " + people.length + " from " + name);
+      setNotice(
+        "@" +
+          String(name).replace(/^@/, "") +
+          " — Instagram / Facebook do not give apps another account’s full follower list (e.g. 330K). Only the page you manage can be exported after official Meta login. This CSV is a sample of that official path, not scraped users."
+      );
+      toast("Official list is blocked by Instagram — sample export only");
     }, 900);
   }
 
@@ -258,7 +273,8 @@ export function InFollow({ toast, user }) {
           One IG name. One FB name. Followers + following as CSV.
         </h3>
         <p style={{ color: "var(--muted)", maxWidth: 640, marginTop: 6 }}>
-          Profile name type cheste list generate avuthundi. Demo data — live Meta connect tarvata real export.
+          @sabarimala18 lanti vere account 330K followers CSV Instagram allow cheyadu — unofficial scrape
+          cheyamu. Nee connected Business account followers matrame official API tho ravadam possible.
         </p>
       </div>
 
@@ -299,7 +315,8 @@ export function InFollow({ toast, user }) {
         </div>
       </div>
 
-      {busy && <p style={{ color: "var(--muted)" }}>Pulling list…</p>}
+      {notice && <p className="auth-error">{notice}</p>}
+      {busy && <p style={{ color: "var(--muted)" }}>Checking official access…</p>}
 
       {!!rows.length && (
         <div className="card">

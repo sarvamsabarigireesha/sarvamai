@@ -3,6 +3,8 @@ import logo from "../assets/logo.png";
 import { Ico } from "../components/Icons.jsx";
 import { queueKey } from "../auth.js";
 import { BulkDM, InFollow, InstallHint } from "./Tools.jsx";
+import { PostsFeed, AutoComments, AutoDMPanel } from "./Social.jsx";
+import Connect from "./Connect.jsx";
 import {
   CREATOR,
   WEEKLY,
@@ -18,14 +20,16 @@ import {
 
 const NAV = [
   { id: "home", label: "Home", icon: "home" },
+  { id: "posts", label: "Posts", icon: "file" },
   { id: "inbox", label: "Priority inbox", icon: "inbox", badge: "4" },
   { id: "auto", label: "Auto DM", icon: "chat" },
+  { id: "comments", label: "Auto comments", icon: "hash" },
   { id: "bulkdm", label: "Bulk DM", icon: "send" },
   { id: "export", label: "InFollow export", icon: "users" },
   { id: "schedule", label: "Bulk scheduler", icon: "cal" },
   { id: "studio", label: "AI Studio", icon: "spark" },
   { id: "store", label: "Affiliate store", icon: "bag" },
-  { id: "channels", label: "Channels", icon: "settings" },
+  { id: "channels", label: "Connect accounts", icon: "settings" },
 ];
 
 export default function Workspace({ user, onLogout, onSaveUser, toast }) {
@@ -73,9 +77,15 @@ export default function Workspace({ user, onLogout, onSaveUser, toast }) {
             <h2>{NAV.find((n) => n.id === page)?.label}</h2>
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            <span className="pill live">IG {user.channels?.ig?.handle || user.handle}</span>
-            <span className="pill fb">FB {user.channels?.fb?.handle || "Page"}</span>
-            <span className="pill yt">YT {user.channels?.yt?.handle || "Channel"}</span>
+            <span className={"pill " + (user.channels?.ig?.connected ? "live" : "muted")}>
+              IG {user.channels?.ig?.connected ? user.channels.ig.handle : "not connected"}
+            </span>
+            <span className={"pill " + (user.channels?.fb?.connected ? "fb" : "muted")}>
+              FB {user.channels?.fb?.connected ? user.channels.fb.handle : "not connected"}
+            </span>
+            <span className={"pill " + (user.channels?.yt?.connected ? "yt" : "muted")}>
+              YT {user.channels?.yt?.connected ? user.channels.yt.handle : "not connected"}
+            </span>
             <InstallHint toast={toast} />
             <button className="btn btn-ghost btn-sm" onClick={onLogout}>
               <Ico name="logout" size={14} /> Log out
