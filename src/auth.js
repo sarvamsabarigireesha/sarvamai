@@ -32,11 +32,11 @@ export function clearSession() {
   localStorage.removeItem(SESSION_KEY);
 }
 
-function channelsFrom(name, handle, ig, fb, yt) {
+function channelsFrom() {
   return {
-    ig: { handle: ig || handle, connected: true },
-    fb: { handle: fb || name || "My Page", connected: true },
-    yt: { handle: yt || name || "My Channel", connected: true },
+    ig: { handle: "", connected: false },
+    fb: { handle: "", connected: false },
+    yt: { handle: "", connected: false },
   };
 }
 
@@ -55,7 +55,8 @@ export function signup({ name, email, password, ig, fb, yt }) {
     email: mail,
     password: String(password),
     handle,
-    channels: channelsFrom(display, handle, ig, fb, yt),
+    channels: channelsFrom(),
+    onboarded: false,
   };
   users.push(user);
   write(USERS_KEY, users);
@@ -81,6 +82,13 @@ export function publicUser(user) {
 
 export function queueKey(email) {
   return "sarvamai-queue-" + String(email || "guest").toLowerCase();
+}
+
+export function hasConnected(user) {
+  return !!(
+    user?.channels &&
+    Object.values(user.channels).some((c) => c && c.connected && c.handle)
+  );
 }
 
 export function updateUser(email, patch) {
