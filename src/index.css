@@ -1094,6 +1094,23 @@ img {
   left: 21px;
 }
 
+.connect-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+.connect-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+.connect-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .mobile-toggle {
   display: none;
 }
