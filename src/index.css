@@ -855,9 +855,25 @@ img {
 }
 .batch-item {
   display: grid;
-  grid-template-columns: 52px 1fr auto;
+  grid-template-columns: 52px 1fr auto auto;
   gap: 10px;
   align-items: center;
+}
+.ai-spark {
+  color: var(--gold);
+}
+.post-card {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+  align-items: start;
+}
+.post-thumb {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 12px;
 }
 .batch-item input {
   background: var(--bg-3);
@@ -1109,6 +1125,23 @@ img {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+.setup-ol {
+  color: var(--muted);
+  padding-left: 18px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+.setup-ol li {
+  margin: 8px 0;
+}
+.setup-ol code {
+  display: inline-block;
+  background: #161922;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--teal);
 }
 
 .mobile-toggle {

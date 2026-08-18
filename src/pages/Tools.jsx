@@ -47,7 +47,7 @@ export function BulkDM({ toast, user }) {
   }
 
   async function start() {
-    const allowed = plats.filter((p) => user?.channels?.[p]?.connected);
+    const allowed = plats.filter((p) => user?.channels?.[p]?.official);
     if (!allowed.length) {
       toast("Connect Instagram / Facebook first — then send");
       return;
@@ -225,35 +225,38 @@ export function InFollow({ toast, user }) {
   const [src, setSrc] = useState("");
   const [notice, setNotice] = useState("");
 
-  function run(platform) {
+  async function run(platform) {
     const name = platform === "ig" ? ig : fb;
-    if (!String(name).trim()) {
-      toast("Enter the " + (platform === "ig" ? "Instagram" : "Facebook") + " profile name");
-      return;
-    }
-    if (!user?.channels?.[platform]?.connected) {
-      toast("Connect this account first — then export YOUR followers");
+    if (!user?.channels?.[platform]?.official) {
+      toast("Official Facebook login required — Connect accounts");
       return;
     }
     setBusy(true);
-    setSrc("");
+    setRows([]);
     setNotice("");
-    setTimeout(() => {
-      const seed = name.length + (platform === "ig" ? 3 : 9);
-      const people =
-        kind === "both"
-          ? [...fakePeople(seed, 18, "follower"), ...fakePeople(seed + 11, 18, "following")]
-          : fakePeople(seed, kind === "following" ? 24 : 24, kind === "following" ? "following" : "follower");
-      setRows(people);
+    try {
+      const res = await fetch("/api/export/summary");
+      const data = await res.json();
+      if (!res.ok) {
+        setNotice(data.error || "Connect official Facebook first");
+        toast(data.error || "Not connected");
+        return;
+      }
       setSrc(platform);
-      setBusy(false);
       setNotice(
-        "@" +
-          String(name).replace(/^@/, "") +
-          " — Instagram / Facebook do not give apps another account’s full follower list (e.g. 330K). Only the page you manage can be exported after official Meta login. This CSV is a sample of that official path, not scraped users."
+        `${data.handle || name}: official follower count ${Number(data.followers).toLocaleString("en-IN")}. ` +
+          "Meta does not give a CSV of other accounts (e.g. 330K names). Only YOUR connected Professional account count is allowed."
       );
-      toast("Official list is blocked by Instagram — sample export only");
-    }, 900);
+      downloadCsv(`sarvamai-${platform}-summary.csv`, [
+        ["Account", "Followers", "Source"],
+        [data.handle || name, data.followers, "Meta Graph API"],
+      ]);
+      toast("Official summary downloaded");
+    } catch {
+      toast("Export failed");
+    } finally {
+      setBusy(false);
+    }
   }
 
   function csv() {

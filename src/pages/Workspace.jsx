@@ -94,14 +94,18 @@ export default function Workspace({ user, onLogout, onSaveUser, toast }) {
         </header>
         <div className="page">
           {page === "home" && <Home go={go} user={user} />}
+          {page === "posts" && <PostsFeed user={user} toast={toast} go={go} />}
           {page === "inbox" && <Inbox toast={toast} />}
-          {page === "auto" && <AutoDM toast={toast} />}
+          {page === "auto" && <AutoDMPanel user={user} toast={toast} />}
+          {page === "comments" && <AutoComments user={user} toast={toast} />}
           {page === "bulkdm" && <BulkDM toast={toast} user={user} />}
           {page === "export" && <InFollow toast={toast} user={user} />}
           {page === "schedule" && <Scheduler toast={toast} user={user} />}
           {page === "studio" && <Studio toast={toast} />}
           {page === "store" && <Store toast={toast} user={user} />}
-          {page === "channels" && <Channels user={user} onSaveUser={onSaveUser} toast={toast} />}
+          {page === "channels" && (
+            <Connect user={user} onSaveUser={onSaveUser} toast={toast} onDone={() => go("posts")} />
+          )}
         </div>
       </div>
     </div>
@@ -517,11 +521,31 @@ function Scheduler({ toast, user }) {
     toast(fresh.length + " queued on " + platLabel(platforms));
   }
 
-  function postNow(id) {
+  async function postNow(id) {
     setItems((prev) =>
       prev.map((p) => (p.id === id ? { ...p, status: "live", when: localISO(new Date()) } : p))
     );
     const p = items.find((x) => x.id === id);
+    const s = loadSettings(user?.email);
+    if (s.autoCommentOn && s.autoCommentText) {
+      try {
+        const res = await fetch("/api/comment", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ message: s.autoCommentText }),
+        });
+        const data = await res.json();
+        toast(
+          res.ok
+            ? "Posted + auto comment sent"
+            : "Posted · comment: " + (data.error || "needs official IG")
+        );
+        return;
+      } catch {
+        toast("Posted · auto comment pending official connect");
+        return;
+      }
+    }
     toast("Posted now to " + platLabel(p?.platforms || platforms));
   }
 
@@ -595,6 +619,21 @@ function Scheduler({ toast, user }) {
                     setBatch(batch.map((x) => (x.id === b.id ? { ...x, caption: e.target.value } : x)))
                   }
                 />
+                <button
+                  className="btn btn-ghost btn-sm ai-spark"
+                  title="AI caption + hashtags"
+                  onClick={() => {
+                    const pack = CAP_BANK[Math.floor(Math.random() * CAP_BANK.length)];
+                    const tags =
+                      "#reelsindia #telugucreator #hyderabad #sarvamai #" +
+                      b.file.replace(/\.[^.]+$/, "").replace(/[^a-z0-9]+/gi, "").slice(0, 12);
+                    setBatch(batch.map((x) => (x.id === b.id ? { ...x, caption: pack } : x)));
+                    setTags(tags);
+                    toast("AI caption + hashtags ready");
+                  }}
+                >
+                  <Ico name="spark" size={16} /> AI
+                </button>
                 <button className="btn btn-ghost btn-sm" onClick={() => setBatch(batch.filter((x) => x.id !== b.id))}>
                   Remove
                 </button>
